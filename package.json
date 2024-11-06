@@ -1,0 +1,26 @@
+{
+    "name": "template-phaser-rsbuild",
+    "private": true,
+    "version": "1.0.0",
+    "description": "A Phaser 3 template using Rsbuild and Bun",
+    "author": {
+        "name": "Diego Augusto Ferreira",
+        "email": "daugusto@cpqd.com.br",
+        "url": "https://www.linkedin.com/in/diauferr"
+    },
+    "scripts": {
+        "dev": "bun run log.ts dev && rsbuild dev --open",
+        "build": "bun run log.ts build && rsbuild build",
+        "preview": "rsbuild preview",
+        "dev-nolog": "rsbuild dev --open",
+        "build-nolog": "rsbuild build"
+    },
+    "devDependencies": {
+        "@rsbuild/core": "^1.0.18",
+        "@types/node": "^20.0.0",
+        "typescript": "^5.4.5"
+    },
+    "dependencies": {
+        "phaser": "^3.86.0"
+    }
+}
