@@ -1,6 +1,7 @@
 # Phaser Rsbuild TypeScript Template
 
 A high-performance Phaser 3 game development template that combines three powerful technologies:
+
 - 🎮 **Phaser**: The leading HTML5 game framework
 - 🚀 **Rsbuild**: A Rust-powered build tool with exceptional performance
 - ⚡ **Bun**: The ultra-fast all-in-one JavaScript runtime & bundler
@@ -27,12 +28,14 @@ A high-performance Phaser 3 game development template that combines three powerf
 ### Key Features
 
 1. **Build System**
+
    - Rust-powered compilation for faster builds
    - Built-in TypeScript and source map support
    - Efficient static asset handling
    - Advanced code splitting with Module Federation
 
 2. **Development Experience**
+
    - Instant HMR updates
    - TypeScript type checking
    - Consistent dev and prod builds
@@ -41,26 +44,49 @@ A high-performance Phaser 3 game development template that combines three powerf
 3. **Advanced Capabilities**
 
 ```typescript
-// Example: Game scene with dynamic imports
+// Example: Game scene with efficient asset loading
 class GameScene extends Phaser.Scene {
-    preload() {
-        // Efficient asset loading
-        this.load.image('player', 'assets/sprites/player.png');
-        this.load.json('levelData', 'assets/data/level1.json');
-    }
+  preload() {
+    this.load.image("player", "assets/sprites/player.png");
+    this.load.json("levelData", "assets/data/level1.json");
+  }
 }
 
-// Example: Module Federation for large games
-// rsbuild.config.ts
+// Example: Module Federation for large games - Async level loading
+// game-core/rsbuild.config.ts
 export default defineConfig({
   moduleFederation: {
-    name: 'gameShell',
-    remotes: {
-      levelPack: 'levelPack@http://localhost:3001/remoteEntry.js'
+    name: "gameCore",
+    shared: {
+      phaser: { singleton: true },
+      // Compartilha dependências comuns
+      "@game/utils": { singleton: true },
     },
-    shared: ['phaser']
-  }
+  },
 });
+
+// game-levels/rsbuild.config.ts
+export default defineConfig({
+  moduleFederation: {
+    name: "gameLevels",
+    exposes: {
+      // Expõe níveis e assets específicos
+      "./winter-levels": "./src/worlds/winter/index.ts",
+      "./desert-levels": "./src/worlds/desert/index.ts",
+    },
+    shared: {
+      phaser: { singleton: true },
+      "@game/utils": { singleton: true },
+    },
+  },
+});
+
+// Usage in main game
+async function loadGameWorld(world: "winter" | "desert") {
+  // Carrega dinamicamente o mundo selecionado
+  const levels = await import(`gameLevels/${world}-levels`);
+  return levels.default;
+}
 ```
 
 ## Quick Start
@@ -113,16 +139,16 @@ template-phaser-rsbuild/
 Customize the build process in `rsbuild.config.ts`:
 
 ```typescript
-import { defineConfig } from '@rsbuild/core';
+import { defineConfig } from "@rsbuild/core";
 
 export default defineConfig({
   output: {
     copy: [
-      { 
-        from: './public/assets',
-        to: 'assets'
-      }
-    ]
+      {
+        from: "./public/assets",
+        to: "assets",
+      },
+    ],
   },
   // Additional configuration options
 });
