@@ -47,10 +47,10 @@ const sendAnalytics = async (event: string = "unknown"): Promise<void> => {
 };
 
 // Auto-executa se chamado diretamente
-if (require.main === module) {
-  const args = process.argv.slice(2);
-  sendAnalytics(args[0]).finally(() => process.exit(0));
-}
+// if (require.main === module) {
+//   const args = process.argv.slice(2);
+//   sendAnalytics(args[0]).finally(() => process.exit(0));
+// }
 
 // Exporta para uso como módulo se necessário
 export { sendAnalytics };
