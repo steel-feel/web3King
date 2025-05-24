@@ -1,12 +1,11 @@
 {
-    "name": "template-phaser-rsbuild",
+    "name": "Web3King",
     "private": true,
     "version": "1.0.0",
-    "description": "A Phaser 3 template using Rsbuild and Bun",
+    "description": "RPG game using account abstraction",
     "author": {
-        "name": "Diego Augusto Ferreira",
-        "email": "daugusto@cpqd.com.br",
-        "url": "https://www.linkedin.com/in/diauferr"
+        "name": "steel-feel",
+        "email": "himankjain@yahoo.in"
     },
     "scripts": {
         "dev": "bun run log.ts dev && rsbuild dev --open",
