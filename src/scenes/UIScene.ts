@@ -15,7 +15,7 @@ export class UIScene extends Scene {
 
         // Add 10 points for every chest interaction
         this.chestLootHandler = () => {
-            this.score.changeValue(ScoreOperations.INCREASE, 10);
+            this.score.changeValue(ScoreOperations.INCREASE, 100);
 
             // If you have enough points, you win!
             if (this.score.getValue() === config.winScore) {

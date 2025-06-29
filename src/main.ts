@@ -22,15 +22,16 @@ type GameConfigExtended = Types.Core.GameConfig & {
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 export const config: GameConfigExtended = {
-  title: 'Windsor RPG',
+  title: 'Web3King RPG',
   type: Phaser.WEBGL,
   parent: 'game',
   backgroundColor: '#351f1b',
   scale: {
-      mode: Phaser.Scale.ScaleModes.NONE,
-      width: window.innerWidth,
-      height: window.innerHeight,
-  },
+    mode: Phaser.Scale.ScaleModes.RESIZE,
+    //   width: window.innerWidth,
+    //   height: window.innerHeight,
+    autoCenter: Phaser.Scale.NO_CENTER,
+},
   physics: {
       default: 'arcade',
       arcade: {
@@ -51,7 +52,7 @@ export const config: GameConfigExtended = {
   audio: {
       disableWebAudio: false,
   },
-  winScore: 40,
+  winScore: 500,
   scene: [LoadingScene, Level1, UIScene],
 };
 

@@ -85,7 +85,20 @@
                  "width":0,
                  "x":118,
                  "y":230
-                }],
+                },
+                {
+                     "height":0,
+                     "id":5,
+                     "name":"ChestPoint",
+                     "point":true,
+                     "rotation":0,
+                     "type":"",
+                     "visible":true,
+                     "width":0,
+                     "x":400,
+                     "y":230
+                    }
+              ],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,

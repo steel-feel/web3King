@@ -8,7 +8,8 @@ export class Score extends Text {
     private scoreValue: number;
 
     constructor(scene: Phaser.Scene, x: number, y: number, initScore = 0) {
-        super(scene, x, y, `Score: ${initScore}`);
+        super(scene, x, y, `Score: ${initScore} \n\nControls:\nPress "Up, Down, Left, Right" arrow keys for movement.\nPress "space" for hammer swing`);
+        this.setFontSize("1.2rem")
         scene.add.existing(this);
         this.scoreValue = initScore;
     }
