@@ -1,4 +1,6 @@
-# Phaser Rsbuild TypeScript Template
+# Web3King
+
+![Web3King Image](web3King_img.png)
 
 A high-performance Phaser 3 game development template that combines three powerful technologies:
 
