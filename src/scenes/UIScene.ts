@@ -3,12 +3,14 @@ import { EVENTS_NAME, GameStatus } from '../helpers/constants';
 import { Score, ScoreOperations } from '../classes/score';
 import { Text } from "../classes/text";
 import { config } from '../main'
+import { SmartAccount } from '../helpers/web3actions';
 
 export class UIScene extends Scene {
     private score!: Score;
     private chestLootHandler: () => void;
     private gameEndPhrase!: Text;
     private gameEndHandler: (status: GameStatus) => void;
+    private smartAccount: SmartAccount;
 
     constructor() {
         super('ui-scene');
@@ -54,6 +56,8 @@ export class UIScene extends Scene {
                 this.scene.restart();
             });
         };
+
+        this.smartAccount = new SmartAccount();
     }
 
     // Initialize event listeners
@@ -63,6 +67,7 @@ export class UIScene extends Scene {
     }
     
     create(): void {
+     
         this.score = new Score(this, 20, 20, 0);
         this.initListeners();
     }
