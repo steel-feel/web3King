@@ -29,19 +29,19 @@ export class UIScene extends Scene {
             this.cameras.main.setBackgroundColor('rgba(0,0,0,0.6)');
             this.game.scene.pause('level-1-scene');
             this.gameEndPhrase = new Text(
-              this,
-              this.game.scale.width / 2,
-              this.game.scale.height * 0.4,
-              status === GameStatus.LOSE
-                ? `WASTED!\nCLICK TO RESTART`
-                : `YOU ARE ROCK!\nCLICK TO RESTART`,
+                this,
+                this.game.scale.width / 2,
+                this.game.scale.height * 0.4,
+                status === GameStatus.LOSE
+                    ? `WASTED!\nCLICK TO RESTART`
+                    : `YOU ARE ROCK!\nCLICK TO RESTART`,
             )
-              .setAlign('center')
-              .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff');
+                .setAlign('center')
+                .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff');
 
             this.gameEndPhrase.setPosition(
-              this.game.scale.width / 2 - this.gameEndPhrase.width / 2,
-              this.game.scale.height * 0.4,
+                this.game.scale.width / 2 - this.gameEndPhrase.width / 2,
+                this.game.scale.height * 0.4,
             );
 
             /**
@@ -58,6 +58,74 @@ export class UIScene extends Scene {
         };
 
         this.smartAccount = new SmartAccount();
+        //TODO: remove it
+
+
+    }
+
+    async init() {
+        if (import.meta.env.DEV) {
+       const debugButton = this.add.text(20, 200, 'Debug')
+            .setPadding(10)
+            .setStyle({ backgroundColor: '#111' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', this.onDebug, this)
+            .on('pointerover', () => debugButton.setStyle({ fill: '#f39c12' }))
+            .on('pointerout', () => debugButton.setStyle({ fill: '#FFF' }))
+        
+       const addPointsBtn = this.add.text(20, 250, 'Add Points')
+            .setPadding(10)
+            .setStyle({ backgroundColor: '#111' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', this.addPoints, this)
+            .on('pointerover', () => addPointsBtn.setStyle({ fill: '#f39c12' }))
+            .on('pointerout', () => addPointsBtn.setStyle({ fill: '#FFF' })) 
+        
+            const readPointsBtn = this.add.text(20, 300, 'Read Points')
+            .setPadding(10)
+            .setStyle({ backgroundColor: '#111' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', this.readPoints, this)
+            .on('pointerover', () => readPointsBtn.setStyle({ fill: '#f39c12' }))
+            .on('pointerout', () => readPointsBtn.setStyle({ fill: '#FFF' }))     
+
+       const finaliseGameBtn = this.add.text(20, 350, 'Finalise Game')
+            .setPadding(10)
+            .setStyle({ backgroundColor: '#111' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', this.finalGame, this)
+            .on('pointerover', () => finaliseGameBtn.setStyle({ fill: '#f39c12' }))
+            .on('pointerout', () => finaliseGameBtn.setStyle({ fill: '#FFF' }))     
+
+        const nftBtn = this.add.text(20, 350, 'Read NFT')
+            .setPadding(10)
+            .setStyle({ backgroundColor: '#111' })
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', this.nftGame, this)
+            .on('pointerover', () => nftBtn.setStyle({ fill: '#f39c12' }))
+            .on('pointerout', () => nftBtn.setStyle({ fill: '#FFF' }))          
+        }
+    }
+
+    async onDebug() {
+        await this.smartAccount.createAccount();
+        await this.smartAccount.setupAuth();
+    }
+
+    async addPoints() {
+        await this.smartAccount.addPoints();
+    }
+
+    async readPoints() {
+        await this.smartAccount.readPoints();
+    }
+
+    async finalGame() {
+        await this.smartAccount.finalGame();
+    }
+
+    async nftGame() {
+        await this.smartAccount.getNFT();
     }
 
     // Initialize event listeners
@@ -65,9 +133,9 @@ export class UIScene extends Scene {
         this.game.events.on(EVENTS_NAME.CHEST_LOOT, this.chestLootHandler, this);
         this.game.events.once(EVENTS_NAME.GAME_END, this.gameEndHandler, this);
     }
-    
+
     create(): void {
-     
+
         this.score = new Score(this, 20, 20, 0);
         this.initListeners();
     }
