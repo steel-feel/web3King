@@ -1,17 +1,16 @@
 /*
-
-   Web3GameFactory: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-  Web3KingNFT: 0x5FbDB2315678afecb367f032d93F642f64180aa3
-  GameAccount: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
+ Web3GameFactory: 0x1E33E10EDaaf8c28C301d4aEFd90ac665Dbb8DFE
+  Web3KingNFT: 0x1BA70354F93159dd1aC907a89dE88B45eA3Ac11D
+  GameAccount: 0x4ABB079a6Da61EC5401311F5401E521f7182c46C
 */
 
 import { Hex } from "viem"
 
-export const factoryAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" as Hex
+export const factoryAddress = "0x1E33E10EDaaf8c28C301d4aEFd90ac665Dbb8DFE" as Hex
 
-export const gameAccountAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0' as Hex
+export const gameAccountAddress = '0x4ABB079a6Da61EC5401311F5401E521f7182c46C' as Hex
 
-export const nftContractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3' as Hex
+export const nftContractAddress = '0x1BA70354F93159dd1aC907a89dE88B45eA3Ac11D' as Hex
 
 export const factoryABI = [
     {

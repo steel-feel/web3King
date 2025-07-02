@@ -1,4 +1,4 @@
-import { anvil } from "viem/chains";
+import { baseSepolia, holesky } from "viem/chains";
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 import {
@@ -9,7 +9,8 @@ import {
     WalletClient,
     PublicClient,
     Hex,
-    SignAuthorizationReturnType
+    SignAuthorizationReturnType,
+   type Chain
 } from "viem";
 import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress, nftContractAddress } from "./contracts";
 import { KyInstance } from "ky";
@@ -23,13 +24,17 @@ export class SmartAccount {
     private publicClient: PublicClient;
     private authorization: SignAuthorizationReturnType;
     private api: KyInstance;
+    private chain: Chain;
 
     //TODO: replace with eoa
     private eoaClient: WalletClient;
     private eoaAddress: Hex;
     private abstractAccAddr: Hex;
 
+    private lastHash: Hex
+
     constructor() {
+        this.chain = baseSepolia
         let privateKey = localStorage.getItem("CLIENT_PVT_KEY") as Hex;
         if (!privateKey) {
             privateKey = generatePrivateKey() as Hex;
@@ -37,7 +42,7 @@ export class SmartAccount {
         }
         this.abstractClient = createWalletClient({
             account: privateKeyToAccount(privateKey),
-            chain: anvil,
+            chain: this.chain,
             //@ts-ignore
             transport: http()
         });
@@ -45,7 +50,7 @@ export class SmartAccount {
         this.abstractAccAddr = this.abstractClient.account?.address;
 
         this.publicClient = createPublicClient({
-            chain: anvil,
+            chain: this.chain,
             transport: http(),
         });
 
@@ -63,7 +68,7 @@ export class SmartAccount {
             try {
               // Create a Viem Wallet Client
               this.eoaClient = createWalletClient({
-                chain: anvil, // Specify the chain (e.g., mainnet, sepolia)
+                chain: this.chain, // Specify the chain (e.g., mainnet, sepolia)
                 transport: custom(window.ethereum), // Use the custom transport with window.ethereum
               });
           
@@ -81,7 +86,7 @@ export class SmartAccount {
               alert('Failed to connect to MetaMask. Please try again.');
             }
 
-            const targetChain = anvil;
+            const targetChain = this.chain;
 
             try {
                 await this.eoaClient.switchChain({ id: targetChain.id });
