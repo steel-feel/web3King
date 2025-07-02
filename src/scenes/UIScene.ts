@@ -4,9 +4,11 @@ import { Score, ScoreOperations } from '../classes/score';
 import { Text } from "../classes/text";
 import { config } from '../main'
 import { SmartAccount } from '../helpers/web3actions';
+import { Wallet } from '../classes/wallet';
 
 export class UIScene extends Scene {
     private score!: Score;
+    private wallet!:Wallet;
     private chestLootHandler: () => void;
     private gameEndPhrase!: Text;
     private gameEndHandler: (status: GameStatus) => void;
@@ -80,6 +82,7 @@ export class UIScene extends Scene {
             await this.smartAccount.setupAuth();
             await this.smartAccount.createAccount();
             this.connectButton.setVisible(false)
+            this.wallet.changeStatus(this.smartAccount.getEOAAccount())
         }
 
         this.smartAccount = new SmartAccount();
@@ -177,8 +180,8 @@ export class UIScene extends Scene {
     }
 
     create(): void {
-
         this.score = new Score(this, 20, 20, 0);
+        this.wallet = new Wallet(this, 20, 140) ;
         this.initListeners();
     }
 }

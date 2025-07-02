@@ -80,6 +80,43 @@ export class SmartAccount {
               console.error('Error connecting to MetaMask:', error);
               alert('Failed to connect to MetaMask. Please try again.');
             }
+
+            const targetChain = anvil;
+
+            try {
+                await this.eoaClient.switchChain({ id: targetChain.id });
+                console.log(`Successfully switched to ${targetChain.name} (ID: ${targetChain.id})`);
+              } catch (switchError: any) {
+                // User rejected the switch or chain is not added
+                if (switchError.code === 4902) { // 4902 is the error code for "Unrecognized chain ID"
+                  console.warn(`Chain ${targetChain.name} (ID: ${targetChain.id}) not found in MetaMask. Attempting to add it...`);
+                  try {
+                    await this.eoaClient.addChain({ chain: targetChain });
+                    console.log(`Successfully added and switched to ${targetChain.name} (ID: ${targetChain.id})`);
+                  } catch (addError: any) {
+                    if (addError.code === 4001) {
+                      console.error('User rejected adding the chain.');
+                      alert('You rejected adding the new chain. Please approve to connect.');
+                    } else {
+                      console.error('Error adding chain:', addError);
+                      alert(`Failed to add chain ${targetChain.name}. Please try again.`);
+                    }
+                    return; // Stop execution if adding fails
+                  }
+                } else if (switchError.code === 4001) {
+                  console.error('User rejected switching chain.');
+                  alert('You rejected switching the chain. Please approve to connect.');
+                  return; // Stop execution if user rejects switch
+                } else {
+                  console.error('Error switching chain:', switchError);
+                  alert(`Failed to switch to ${targetChain.name}. Please try again.`);
+                  return; // Stop execution for other switch errors
+                }
+              }
+            
+          
+
+
          
     }
 
@@ -180,6 +217,9 @@ export class SmartAccount {
         return nftContractAddress;
     }
 
+    getEOAAccount(): Hex {
+        return this.eoaAddress;
+    }
 
 
 }
