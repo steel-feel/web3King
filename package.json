@@ -20,6 +20,7 @@
         "typescript": "^5.4.5"
     },
     "dependencies": {
+        "ky": "^1.8.1",
         "phaser": "^3.86.0",
         "viem": "^2.31.4"
     }

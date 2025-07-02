@@ -14,9 +14,14 @@ export class Level1 extends Scene {
     private groundLayer?: Tilemaps.TilemapLayer;
 
     private chests!: Phaser.GameObjects.Sprite[];
-    
+    private walletConnected: () => void;
     constructor() {
       super('level-1-scene');
+    
+      this.walletConnected = () => {
+       this.scene.resume();
+    }
+
     }
 
     // Initialize map
@@ -116,6 +121,12 @@ export class Level1 extends Scene {
         console.log(this.wallsLayer?.width)
         console.log(this.wallsLayer?.height)
       }
+    
+     private initListeners(): void {
+        this.scene.pause();
+        this.game.events.once(EVENTS_NAME.WALLET_CONNECTED, this.walletConnected , this)   
+        // this.game.events.once(EVENTS_NAME.WALLET_CONNECTED, this. , this)
+      }  
 
     create(): void {
 
@@ -134,6 +145,8 @@ export class Level1 extends Scene {
         this.initCamera();
 
         this.physics.add.collider(this.player, this?.wallsLayer as any);
+
+        this.initListeners();
     }
 
     update(): void {

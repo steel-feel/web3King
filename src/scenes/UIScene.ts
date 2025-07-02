@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import { EVENTS_NAME, GameStatus } from '../helpers/constants';
+import { EVENTS_NAME, GameStatus, WalletConnect } from '../helpers/constants';
 import { Score, ScoreOperations } from '../classes/score';
 import { Text } from "../classes/text";
 import { config } from '../main'
@@ -11,6 +11,10 @@ export class UIScene extends Scene {
     private gameEndPhrase!: Text;
     private gameEndHandler: (status: GameStatus) => void;
     private smartAccount: SmartAccount;
+    private status: WalletConnect;
+    private walletConnected: () => void;
+    private connectButton: Phaser.GameObjects.Text
+
 
     constructor() {
         super('ui-scene');
@@ -49,7 +53,7 @@ export class UIScene extends Scene {
             )
                 .setAlign('center')
                 .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff')
-                .setFontSize("2rem");
+                .setFontSize("1rem");
 
             this.gameEndPhrase.setPosition(
                 this.game.scale.width / 2 - this.gameEndPhrase.width / 2,
@@ -72,6 +76,12 @@ export class UIScene extends Scene {
 
         };
 
+        this.walletConnected = async () => {
+            await this.smartAccount.setupAuth();
+            await this.smartAccount.createAccount();
+            this.connectButton.setVisible(false)
+        }
+
         this.smartAccount = new SmartAccount();
         //TODO: remove it
 
@@ -79,13 +89,13 @@ export class UIScene extends Scene {
     }
 
     async init() {
-        try {
-            await this.smartAccount.setupAuth();
-            await this.smartAccount.createAccount();
-          
-        } catch(error){
-            console.log(error);
-        }
+        this.connectButton = this.add.text(20, 200, 'Connect Wallet')
+        .setPadding(10)
+        .setStyle({ backgroundColor: '#111' })
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', this.onConnect, this)
+        .on('pointerover', () => this.connectButton.setStyle({ fill: '#f39c12' }))
+        .on('pointerout', () => this.connectButton.setStyle({ fill: '#FFF' }))
 
         // if (import.meta.env.DEV) {
        if(false) {
@@ -134,9 +144,11 @@ export class UIScene extends Scene {
         }
     }
 
-    async onDebug() {
-        await this.smartAccount.createAccount();
-        await this.smartAccount.setupAuth();
+    async onConnect() {
+        await this.smartAccount.connectWallet();
+        this.game.events.emit(EVENTS_NAME.WALLET_CONNECTED);
+        // await this.smartAccount.createAccount();
+        // await this.smartAccount.setupAuth();
     }
 
     async addPoints() {
@@ -160,7 +172,8 @@ export class UIScene extends Scene {
     // Initialize event listeners
     private initListeners(): void {
         this.game.events.on(EVENTS_NAME.CHEST_LOOT, this.chestLootHandler, this);
-        this.game.events.once(EVENTS_NAME.GAME_END, this.gameEndHandler, this);
+        this.game.events.once(EVENTS_NAME.GAME_END, this.gameEndHandler, this);  
+        this.game.events.once(EVENTS_NAME.WALLET_CONNECTED, this.walletConnected , this)   
     }
 
     create(): void {

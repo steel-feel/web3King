@@ -80,6 +80,7 @@ export default defineConfig({
     define: {
       'import.meta.env.RELAYER_PVT_KEY': JSON.stringify(import.meta.env.RELAYER_PVT_KEY),
       'import.meta.env.EOA_PVT_KEY': JSON.stringify(import.meta.env.EOA_PVT_KEY),
+      'import.meta.env.RELAYER_SERVER_URL': JSON.stringify(import.meta.env.RELAYER_SERVER_URL),
   }
 },
   tools: {

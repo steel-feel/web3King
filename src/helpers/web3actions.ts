@@ -3,10 +3,8 @@ import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 import {
     createPublicClient,
-    encodeFunctionData,
     createWalletClient,
     http,
-
     custom,
     WalletClient,
     PublicClient,
@@ -14,6 +12,8 @@ import {
     SignAuthorizationReturnType
 } from "viem";
 import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress, nftContractAddress } from "./contracts";
+import { KyInstance } from "ky";
+import ky from 'ky';
 
 
 //TODO: connect with web3 wallet
@@ -22,9 +22,12 @@ export class SmartAccount {
     private abstractClient: WalletClient;
     private publicClient: PublicClient;
     private authorization: SignAuthorizationReturnType;
+    private api: KyInstance;
 
     //TODO: replace with eoa
     private eoaClient: WalletClient;
+    private eoaAddress: Hex;
+    private abstractAccAddr: Hex;
 
     constructor() {
         let privateKey = localStorage.getItem("CLIENT_PVT_KEY") as Hex;
@@ -39,31 +42,55 @@ export class SmartAccount {
             transport: http()
         });
 
+        this.abstractAccAddr = this.abstractClient.account?.address;
+
         this.publicClient = createPublicClient({
             chain: anvil,
             transport: http(),
         });
 
-        //TODO: replace with external wallet connect
-        this.eoaClient = createWalletClient({
-            //@ts-ignore
-            account: privateKeyToAccount(import.meta.env.EOA_PVT_KEY),
-            chain: anvil,
-            //@ts-ignore
-            transport: http()
-        });
+        this.api = ky.create({ prefixUrl: import.meta.env.RELAYER_SERVER_URL } );
 
     }
-    //TODO: move to relayer
+   
+    async connectWallet() {  
+            // Check if MetaMask is installed
+            if (typeof window.ethereum === 'undefined') {
+              alert('MetaMask is not installed. Please install it to connect.');
+              return;
+            }
+          
+            try {
+              // Create a Viem Wallet Client
+              this.eoaClient = createWalletClient({
+                chain: anvil, // Specify the chain (e.g., mainnet, sepolia)
+                transport: custom(window.ethereum), // Use the custom transport with window.ethereum
+              });
+          
+              // Request accounts from MetaMask
+              // This will open the MetaMask popup asking the user to connect
+              const [userAccount] = await this.eoaClient.requestAddresses();
+              
+              this.eoaAddress = userAccount;
+              
+              console.log('Connected MetaMask account:', this.eoaAddress);
+    
+          
+            } catch (error) {
+              console.error('Error connecting to MetaMask:', error);
+              alert('Failed to connect to MetaMask. Please try again.');
+            }
+         
+    }
+
     async createAccount() {
-        const response = await (await fetch("http://localhost:3000/create-account", {
-            method: "POST",
-            body: JSON.stringify({ owner: this.eoaClient.account?.address, abstractAccount: this.abstractClient.account?.address  }, (key, value) =>
-                typeof value === 'bigint'
-                    ? value.toString()
-                    : value // return everything else unchanged
-            ),
-        })).json();
+        const response = await this.api.post('create-account', {
+            body: JSON.stringify(
+                { owner: this.eoaAddress, abstractAccount: this.abstractAccAddr },
+                (key, value) =>
+                    typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
+            )
+        }).json()
 
         console.log({ response });
 
@@ -89,29 +116,26 @@ export class SmartAccount {
         //@ts-ignore
         this.authorization = await this.abstractClient.signAuthorization(rawAuth);
 
-        const response = await (await fetch("http://localhost:3000/setup-auth", {
-            method: "POST",
-            body: JSON.stringify({ authorization: this.authorization, abstractAccount: this.abstractClient?.account.address }, (key, value) =>
+        const response = await this.api.post('setup-auth', {
+            body: JSON.stringify({ authorization: this.authorization, abstractAccount: this.abstractAccAddr }, (key, value) =>
                 typeof value === 'bigint'
                     ? value.toString()
                     : value // return everything else unchanged
-            ),
-        })).json();
+            )
+        }).json();
 
         console.log({ response });
 
     }
 
     async addPoints() {
-
-        const response = await (await fetch("http://localhost:3000/add-points", {
-            method: "POST",
-            body: JSON.stringify({ abstractAccount: this.abstractClient.account.address, points: 100n }, (key, value) =>
+        const response = await this.api.post('add-points', {
+            body: JSON.stringify({ abstractAccount: this.abstractAccAddr, points: 100n }, (key, value) =>
                 typeof value === 'bigint'
                     ? value.toString()
                     : value // return everything else unchanged
-            ),
-        })).json();
+            )
+        }).json();
 
         console.log({ response });
 
@@ -119,7 +143,7 @@ export class SmartAccount {
 
     async readPoints() {
         const points = await this.publicClient.readContract({
-            address: this.abstractClient.account.address,
+            address: this.abstractAccAddr,
             abi: gameAccountABI,
             functionName: "points",
         });
@@ -128,15 +152,13 @@ export class SmartAccount {
     }
 
     async finalGame() {
-
-        const response = await (await fetch("http://localhost:3000/end-game", {
-            method: "POST",
-            body: JSON.stringify({ abstractAccount: this.abstractClient.account.address}, (key, value) =>
+        const response = await this.api.post('end-game', {
+            body: JSON.stringify({ abstractAccount: this.abstractAccAddr }, (key, value) =>
                 typeof value === 'bigint'
                     ? value.toString()
                     : value // return everything else unchanged
-            ),
-        })).json();
+            )
+        }).json();
 
         console.log({ response });
 
@@ -147,7 +169,7 @@ export class SmartAccount {
             address: factoryAddress,
             abi: factoryABI,
             functionName: "gameAccounts",
-            args: [this.eoaClient.account?.address]
+            args: [this.eoaAddress]
         });
 
         console.log({ gameAccountDetails });
