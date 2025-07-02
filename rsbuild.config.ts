@@ -49,8 +49,9 @@ export default defineConfig({
             keep_fnames: false,
           },
           format: {
+            asciiOnly: true,
             comments: false,
-            ascii_only: true,
+            // ascii_only: true,
             indent_level: 0,
             beautify: false,
           },
