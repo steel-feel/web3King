@@ -16,7 +16,8 @@ export class UIScene extends Scene {
         super('ui-scene');
 
         // Add 10 points for every chest interaction
-        this.chestLootHandler = () => {
+        this.chestLootHandler = async () => {
+            await this.smartAccount.addPoints();
             this.score.changeValue(ScoreOperations.INCREASE, 100);
 
             // If you have enough points, you win!
@@ -25,7 +26,17 @@ export class UIScene extends Scene {
             }
         };
 
-        this.gameEndHandler = (status) => {
+        this.gameEndHandler = async (status) => {
+            let nftId;
+            if(status == GameStatus.WIN) {
+                try {
+                    await this.smartAccount.finalGame();
+                    nftId =  await this.smartAccount.getNFT();
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+
             this.cameras.main.setBackgroundColor('rgba(0,0,0,0.6)');
             this.game.scene.pause('level-1-scene');
             this.gameEndPhrase = new Text(
@@ -34,15 +45,18 @@ export class UIScene extends Scene {
                 this.game.scale.height * 0.4,
                 status === GameStatus.LOSE
                     ? `WASTED!\nCLICK TO RESTART`
-                    : `YOU ARE ROCK!\nCLICK TO RESTART`,
+                    : `YOU ROCK!, TRUE VIKING \nyour NFT ${nftId} at collection ${this.smartAccount.getNFTContract()}\nCLICK TO RESTART\n`,
             )
                 .setAlign('center')
-                .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff');
+                .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff')
+                .setFontSize("2rem");
 
             this.gameEndPhrase.setPosition(
                 this.game.scale.width / 2 - this.gameEndPhrase.width / 2,
                 this.game.scale.height * 0.4,
             );
+
+          
 
             /**
              * When the mouse is clicked
@@ -55,6 +69,7 @@ export class UIScene extends Scene {
                 this.scene.get('level-1-scene').scene.restart();
                 this.scene.restart();
             });
+
         };
 
         this.smartAccount = new SmartAccount();
@@ -64,46 +79,58 @@ export class UIScene extends Scene {
     }
 
     async init() {
-        if (import.meta.env.DEV) {
-       const debugButton = this.add.text(20, 200, 'Debug')
-            .setPadding(10)
-            .setStyle({ backgroundColor: '#111' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', this.onDebug, this)
-            .on('pointerover', () => debugButton.setStyle({ fill: '#f39c12' }))
-            .on('pointerout', () => debugButton.setStyle({ fill: '#FFF' }))
+        try {
+            await this.smartAccount.setupAuth();
+            await this.smartAccount.createAccount();
+          
+        } catch(error){
+            console.log(error);
+        }
+
+        // if (import.meta.env.DEV) {
+       if(false) {
         
-       const addPointsBtn = this.add.text(20, 250, 'Add Points')
-            .setPadding(10)
-            .setStyle({ backgroundColor: '#111' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', this.addPoints, this)
-            .on('pointerover', () => addPointsBtn.setStyle({ fill: '#f39c12' }))
-            .on('pointerout', () => addPointsBtn.setStyle({ fill: '#FFF' })) 
-        
+               const debugButton = this.add.text(20, 200, 'Debug')
+                    .setPadding(10)
+                    .setStyle({ backgroundColor: '#111' })
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerdown', this.onDebug, this)
+                    .on('pointerover', () => debugButton.setStyle({ fill: '#f39c12' }))
+                    .on('pointerout', () => debugButton.setStyle({ fill: '#FFF' }))
+            
+
+            const addPointsBtn = this.add.text(20, 250, 'Add Points')
+                .setPadding(10)
+                .setStyle({ backgroundColor: '#111' })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', this.addPoints, this)
+                .on('pointerover', () => addPointsBtn.setStyle({ fill: '#f39c12' }))
+                .on('pointerout', () => addPointsBtn.setStyle({ fill: '#FFF' }))
+            
+            
             const readPointsBtn = this.add.text(20, 300, 'Read Points')
-            .setPadding(10)
-            .setStyle({ backgroundColor: '#111' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', this.readPoints, this)
-            .on('pointerover', () => readPointsBtn.setStyle({ fill: '#f39c12' }))
-            .on('pointerout', () => readPointsBtn.setStyle({ fill: '#FFF' }))     
+                .setPadding(10)
+                .setStyle({ backgroundColor: '#111' })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', this.readPoints, this)
+                .on('pointerover', () => readPointsBtn.setStyle({ fill: '#f39c12' }))
+                .on('pointerout', () => readPointsBtn.setStyle({ fill: '#FFF' }))
 
-       const finaliseGameBtn = this.add.text(20, 350, 'Finalise Game')
-            .setPadding(10)
-            .setStyle({ backgroundColor: '#111' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', this.finalGame, this)
-            .on('pointerover', () => finaliseGameBtn.setStyle({ fill: '#f39c12' }))
-            .on('pointerout', () => finaliseGameBtn.setStyle({ fill: '#FFF' }))     
+            // const finaliseGameBtn = this.add.text(20, 350, 'Finalise Game')
+            //     .setPadding(10)
+            //     .setStyle({ backgroundColor: '#111' })
+            //     .setInteractive({ useHandCursor: true })
+            //     .on('pointerdown', this.finalGame, this)
+            //     .on('pointerover', () => finaliseGameBtn.setStyle({ fill: '#f39c12' }))
+            //     .on('pointerout', () => finaliseGameBtn.setStyle({ fill: '#FFF' }))
 
-        const nftBtn = this.add.text(20, 350, 'Read NFT')
-            .setPadding(10)
-            .setStyle({ backgroundColor: '#111' })
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', this.nftGame, this)
-            .on('pointerover', () => nftBtn.setStyle({ fill: '#f39c12' }))
-            .on('pointerout', () => nftBtn.setStyle({ fill: '#FFF' }))          
+            const nftBtn = this.add.text(20, 350, 'Read NFT')
+                .setPadding(10)
+                .setStyle({ backgroundColor: '#111' })
+                .setInteractive({ useHandCursor: true })
+                .on('pointerdown', this.nftGame, this)
+                .on('pointerover', () => nftBtn.setStyle({ fill: '#f39c12' }))
+                .on('pointerout', () => nftBtn.setStyle({ fill: '#FFF' }))
         }
     }
 
@@ -113,6 +140,7 @@ export class UIScene extends Scene {
     }
 
     async addPoints() {
+        return
         await this.smartAccount.addPoints();
     }
 
@@ -121,6 +149,7 @@ export class UIScene extends Scene {
     }
 
     async finalGame() {
+        return;
         await this.smartAccount.finalGame();
     }
 

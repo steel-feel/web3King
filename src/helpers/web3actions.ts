@@ -13,29 +13,25 @@ import {
     Hex,
     SignAuthorizationReturnType
 } from "viem";
-import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress } from "./contracts";
+import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress, nftContractAddress } from "./contracts";
 
 
 //TODO: connect with web3 wallet
 
 export class SmartAccount {
-    private gameAccountAddress: Hex;
     private abstractClient: WalletClient;
     private publicClient: PublicClient;
     private authorization: SignAuthorizationReturnType;
 
-    //TODO: move the relayer account to server
-    private relayerClient: WalletClient;
     //TODO: replace with eoa
     private eoaClient: WalletClient;
 
     constructor() {
         let privateKey = localStorage.getItem("CLIENT_PVT_KEY") as Hex;
-        if(!privateKey)
-        {
+        if (!privateKey) {
             privateKey = generatePrivateKey() as Hex;
             localStorage.setItem("CLIENT_PVT_KEY", privateKey)
-        }       
+        }
         this.abstractClient = createWalletClient({
             account: privateKeyToAccount(privateKey),
             chain: anvil,
@@ -46,14 +42,6 @@ export class SmartAccount {
         this.publicClient = createPublicClient({
             chain: anvil,
             transport: http(),
-        });
-
-        this.relayerClient = createWalletClient({
-            //@ts-ignore
-            account: privateKeyToAccount(import.meta.env.RELAYER_PVT_KEY),
-            chain: anvil,
-            //@ts-ignore
-            transport: http()
         });
 
         //TODO: replace with external wallet connect
@@ -68,15 +56,16 @@ export class SmartAccount {
     }
     //TODO: move to relayer
     async createAccount() {
-        const hash = await this.relayerClient.writeContract({
-            address: factoryAddress,
-            abi: factoryABI,
-            functionName: "newAccount",
-            args: [this.eoaClient.account?.address, this.abstractClient.account?.address],
-            account: this.relayerClient?.account ,
-        })
+        const response = await (await fetch("http://localhost:3000/create-account", {
+            method: "POST",
+            body: JSON.stringify({ owner: this.eoaClient.account?.address, abstractAccount: this.abstractClient.account?.address  }, (key, value) =>
+                typeof value === 'bigint'
+                    ? value.toString()
+                    : value // return everything else unchanged
+            ),
+        })).json();
 
-        console.log({ hash })
+        console.log({ response });
 
     }
 
@@ -85,8 +74,8 @@ export class SmartAccount {
             address: factoryAddress,
             abi: factoryABI,
             functionName: "gameAccounts",
-            args : [this.eoaClient.account?.address]
-          }) as Hex;
+            args: [this.eoaClient.account?.address]
+        }) as Hex;
         return data;
     }
 
@@ -94,32 +83,38 @@ export class SmartAccount {
         //fetch the game account or create one
         const rawAuth = await this.abstractClient.prepareAuthorization({
             account: this.abstractClient?.account,
-            contractAddress: gameAccountAddress ,
+            contractAddress: gameAccountAddress,
         })
 
         //@ts-ignore
         this.authorization = await this.abstractClient.signAuthorization(rawAuth);
 
-        const hash = await this.relayerClient.writeContract({ 
-            abi: gameAccountABI, 
-            address: this.abstractClient?.account.address, 
-            authorizationList: [this.authorization], 
-            functionName: 'initialize', 
-          })
+        const response = await (await fetch("http://localhost:3000/setup-auth", {
+            method: "POST",
+            body: JSON.stringify({ authorization: this.authorization, abstractAccount: this.abstractClient?.account.address }, (key, value) =>
+                typeof value === 'bigint'
+                    ? value.toString()
+                    : value // return everything else unchanged
+            ),
+        })).json();
 
-        console.log("Set Auth sucess ", { hash });
+        console.log({ response });
+
     }
 
     async addPoints() {
-      const hash = await this.relayerClient.writeContract({
-          abi: gameAccountABI,
-          address: this.abstractClient.account.address,
-          functionName: "addPoints",
-          args: [100n]
-      });
-      
-     console.log({ hash });
-    
+
+        const response = await (await fetch("http://localhost:3000/add-points", {
+            method: "POST",
+            body: JSON.stringify({ abstractAccount: this.abstractClient.account.address, points: 100n }, (key, value) =>
+                typeof value === 'bigint'
+                    ? value.toString()
+                    : value // return everything else unchanged
+            ),
+        })).json();
+
+        console.log({ response });
+
     }
 
     async readPoints() {
@@ -127,34 +122,41 @@ export class SmartAccount {
             address: this.abstractClient.account.address,
             abi: gameAccountABI,
             functionName: "points",
-          });
-
-          console.log({ points });
-    }
-
-    async finalGame(){
-        const hash = await this.relayerClient.writeContract({
-            abi: gameAccountABI,
-            address: this.abstractClient.account.address,
-            functionName: "finalizeGame"
         });
-        
-       console.log( "Finalise game", { hash });
+
+        console.log({ points });
     }
 
-    async getNFT() {
-        
-        const gameAccountDetails = await this.publicClient.readContract({
+    async finalGame() {
+
+        const response = await (await fetch("http://localhost:3000/end-game", {
+            method: "POST",
+            body: JSON.stringify({ abstractAccount: this.abstractClient.account.address}, (key, value) =>
+                typeof value === 'bigint'
+                    ? value.toString()
+                    : value // return everything else unchanged
+            ),
+        })).json();
+
+        console.log({ response });
+
+    }
+
+    async getNFT(): number {
+        const gameAccountDetails: any[] = await this.publicClient.readContract({
             address: factoryAddress,
             abi: factoryABI,
             functionName: "gameAccounts",
-            args : [this.eoaClient.account?.address]
-          });
+            args: [this.eoaClient.account?.address]
+        });
 
-          console.log({ gameAccountDetails });
-
+        console.log({ gameAccountDetails });
+        return gameAccountDetails[0];
     }
 
+    getNFTContract(): Hex {
+        return nftContractAddress;
+    }
 
 
 
