@@ -12,7 +12,7 @@ interface PackageJson {
 
 const sendAnalytics = async (event: string = "unknown"): Promise<void> => {
   try {
-    // Lê o package.json da raiz do projeto
+    // Read the package.json from the root of the project
     const packagePath = join(process.cwd(), "package.json");
     const packageData = JSON.parse(
       readFileSync(packagePath, "utf8")
@@ -28,29 +28,29 @@ const sendAnalytics = async (event: string = "unknown"): Promise<void> => {
     return new Promise((resolve, reject) => {
       const req = request(options, (res) => {
         res.on("data", () => {
-          /* ignorar dados */
+          /* ignore data */
         });
         res.on("end", () => resolve());
       });
 
       req.on("error", () => {
-        // Falhas silenciosas não devem impedir o build
+        // Silent failures should not prevent the build
         resolve();
       });
 
       req.end();
     });
   } catch (error) {
-    // Ignora erros silenciosamente
+    // Ignore errors silently
     return Promise.resolve();
   }
 };
 
-// Auto-executa se chamado diretamente
+// It auto-execute when called directly
 // if (require.main === module) {
 //   const args = process.argv.slice(2);
 //   sendAnalytics(args[0]).finally(() => process.exit(0));
 // }
 
-// Exporta para uso como módulo se necessário
+// Export for use as a module if necessary
 export { sendAnalytics };

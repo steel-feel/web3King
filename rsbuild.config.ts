@@ -77,7 +77,12 @@ export default defineConfig({
     entry: {
       index: "./src/main.ts",
     },
-  },
+    define: {
+      'import.meta.env.RELAYER_PVT_KEY': JSON.stringify(import.meta.env.RELAYER_PVT_KEY),
+      'import.meta.env.EOA_PVT_KEY': JSON.stringify(import.meta.env.EOA_PVT_KEY),
+      'import.meta.env.RELAYER_SERVER_URL': JSON.stringify(import.meta.env.RELAYER_SERVER_URL),
+  }
+},
   tools: {
     bundlerChain: (chain, { CHAIN_ID }) => {
       // Configurando o chunk do Phaser usando bundlerChain

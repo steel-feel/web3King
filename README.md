@@ -1,4 +1,6 @@
-# Phaser Rsbuild TypeScript Template
+# Web3King
+
+![Web3King Image](web3King_img.png)
 
 A high-performance Phaser 3 game development template that combines three powerful technologies:
 
@@ -13,7 +15,6 @@ A high-performance Phaser 3 game development template that combines three powerf
 - [Bun 1.0.30](https://bun.sh)
 - [TypeScript 5.4.5](https://github.com/microsoft/TypeScript)
 
-![screenshot](screenshot.png)
 
 ## ⚡ Performance & Features
 
