@@ -1,4 +1,4 @@
-import { baseSepolia, holesky } from "viem/chains";
+import { baseSepolia, anvil } from "viem/chains";
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 import {
@@ -10,12 +10,12 @@ import {
     PublicClient,
     Hex,
     SignAuthorizationReturnType,
-   type Chain
+   type Chain,
+   BundleTooLargeError
 } from "viem";
 import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress, nftContractAddress } from "./contracts";
 import { KyInstance } from "ky";
 import ky from 'ky';
-import { ADDRGETNETWORKPARAMS } from "node:dns";
 
 
 //TODO: connect with web3 wallet
@@ -32,10 +32,8 @@ export class SmartAccount {
     private eoaAddress: Hex;
     private abstractAccAddr: Hex;
 
-    private lastHash: Hex
-
     constructor() {
-        this.chain = baseSepolia
+        this.chain = import.meta.env.DEV ? anvil : baseSepolia
         let privateKey = localStorage.getItem("CLIENT_PVT_KEY") as Hex;
         if (!privateKey) {
             privateKey = generatePrivateKey() as Hex;
@@ -48,7 +46,7 @@ export class SmartAccount {
             transport: http()
         });
 
-        this.abstractAccAddr = this.abstractClient.account?.address;
+        this.abstractAccAddr = this.abstractClient.account?.address as Hex;
 
         this.publicClient = createPublicClient({
             chain: this.chain,
@@ -121,14 +119,23 @@ export class SmartAccount {
               }   
     }
 
+    async signMessage() : Promise<Hex> {
+        return this.eoaClient.signMessage({
+            account: this.eoaAddress,
+            message: `Using ${this.abstractAccAddr} at Web3King`,
+          })
+    }
+
     async createAccount() {
+    
         const accountDetails = await this.getAccount();
         if (accountDetails[0] > 0n) {
             throw new Error("GAME_ALREADY_PLAYED")
         }
+        const signature = await this.signMessage() ;
         const response = await this.api.post('create-account', {
             body: JSON.stringify(
-                { owner: this.eoaAddress, abstractAccount: this.abstractAccAddr },
+                { signature, owner: this.eoaAddress, abstractAccount: this.abstractAccAddr },
                 (key, value) =>
                     typeof value === 'bigint' ? value.toString() : value // return everything else unchanged
             )
