@@ -8,6 +8,7 @@ export enum EVENTS_NAME {
 export enum GameStatus {
     WIN,
     LOSE,
+    ALREADY_WIN
 }
 
 export enum WalletConnect {

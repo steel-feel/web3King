@@ -15,6 +15,7 @@ import {
 import { factoryABI, factoryAddress, gameAccountABI, gameAccountAddress, nftContractAddress } from "./contracts";
 import { KyInstance } from "ky";
 import ky from 'ky';
+import { ADDRGETNETWORKPARAMS } from "node:dns";
 
 
 //TODO: connect with web3 wallet
@@ -117,15 +118,14 @@ export class SmartAccount {
                   alert(`Failed to switch to ${targetChain.name}. Please try again.`);
                   return; // Stop execution for other switch errors
                 }
-              }
-            
-          
-
-
-         
+              }   
     }
 
     async createAccount() {
+        const accountDetails = await this.getAccount();
+        if (accountDetails[0] > 0n) {
+            throw new Error("GAME_ALREADY_PLAYED")
+        }
         const response = await this.api.post('create-account', {
             body: JSON.stringify(
                 { owner: this.eoaAddress, abstractAccount: this.abstractAccAddr },
@@ -138,13 +138,13 @@ export class SmartAccount {
 
     }
 
-    async getAccount() {
+    async getAccount() : any[] {
         const data = await this.publicClient.readContract({
             address: factoryAddress,
             abi: factoryABI,
             functionName: "gameAccounts",
-            args: [this.eoaClient.account?.address]
-        }) as Hex;
+            args: [this.eoaAddress]
+        });
         return data;
     }
 

@@ -33,14 +33,29 @@ export class UIScene extends Scene {
         };
 
         this.gameEndHandler = async (status) => {
+            this.scene.pause();
             let nftId;
             if(status == GameStatus.WIN) {
                 try {
-                    await this.smartAccount.finalGame();
-                    nftId =  await this.smartAccount.getNFT();
+                  const response = await this.smartAccount.finalGame();
                 } catch (error) {
                     console.log(error);
                 }
+            }
+
+            let message 
+            switch(status) {
+                case GameStatus.LOSE:
+                    message = `WASTED!\nCLICK TO RESTART`
+                break;
+                case GameStatus.WIN:
+                  message = `YOU ROCK!, TRUE VIKING \nyour NFT at collection ${this.smartAccount.getNFTContract()}\nCLICK TO RESTART\n`
+                break
+                case GameStatus.ALREADY_WIN:
+                  const gaDetails = await this.smartAccount.getAccount()
+                    message = `Already a ROCK STAR, \n check your NFT ${gaDetails[0]} at \n collection ${this.smartAccount.getNFTContract()}\n`
+                break;
+
             }
 
             this.cameras.main.setBackgroundColor('rgba(0,0,0,0.6)');
@@ -49,9 +64,7 @@ export class UIScene extends Scene {
                 this,
                 this.game.scale.width / 2,
                 this.game.scale.height * 0.4,
-                status === GameStatus.LOSE
-                    ? `WASTED!\nCLICK TO RESTART`
-                    : `YOU ROCK!, TRUE VIKING \nyour NFT ${nftId} at collection ${this.smartAccount.getNFTContract()}\nCLICK TO RESTART\n`,
+                message,
             )
                 .setAlign('center')
                 .setColor(status === GameStatus.LOSE ? '#ff0000' : '#ffffff')
@@ -69,6 +82,10 @@ export class UIScene extends Scene {
              * The even listeners are turned off
              * and the level 1 scene is restarted 
              */
+            if (status == GameStatus.ALREADY_WIN)
+            {
+                return;
+            }
             this.input.on('pointerdown', () => {
                 this.game.events.off(EVENTS_NAME.CHEST_LOOT, this.chestLootHandler);
                 this.game.events.off(EVENTS_NAME.GAME_END, this.gameEndHandler);
@@ -79,10 +96,16 @@ export class UIScene extends Scene {
         };
 
         this.walletConnected = async () => {
+            try {
             await this.smartAccount.setupAuth();
             await this.smartAccount.createAccount();
             this.connectButton.setVisible(false)
             this.wallet.changeStatus(this.smartAccount.getEOAAccount())
+            }catch(err:Error) {
+                if(err.message == "GAME_ALREADY_PLAYED") {
+                    this.game.events.emit(EVENTS_NAME.GAME_END, GameStatus.ALREADY_WIN);
+                }
+            }
         }
 
         this.smartAccount = new SmartAccount();
